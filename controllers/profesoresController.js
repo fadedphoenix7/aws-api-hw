@@ -6,7 +6,7 @@ const addProfesor = (req, res) => {
   if(!validateFields(req)) return res.status(400).send({})
   let profesor = new Profesor(req);
   try{
-    const query = "INSERT INTO profesor (nombres, apellidos, numero_empleado, horas_clase) VALUES (?, ?, ?, ?)";
+    const query = "INSERT INTO profesor (nombres, apellidos, numeroEmpleado, horasClase) VALUES (?, ?, ?, ?)";
     const params = [profesor.nombres, profesor.apellidos, profesor.numeroEmpleado, profesor.horasClase]
     connection.query(query, params, (err, result) => {
       if (err) throw err;
@@ -34,7 +34,7 @@ const getProfesores = (res) => {
 const getProfesor = (param, res) => {
   const id = param;
   try{
-    const query = "SELECT * FROM profesor WHERE profesor_id = ?";
+    const query = "SELECT * FROM profesor WHERE id = ?";
     const params = [id];
     connection.query(query, params, (err, result) => {
       if (err) throw err;
@@ -52,8 +52,8 @@ const updateProfesor = (req, res, param) => {
   if(!validateFields(req)) return res.status(400).send({})
 
   try{
-    let query = "UPDATE profesor SET nombres = ?, apellidos = ?, numero_empleado = ?, horas_clase = ?";
-    query += " WHERE profesor_id = ?";
+    let query = "UPDATE profesor SET nombres = ?, apellidos = ?, numeroEmpleado = ?, horasClase = ?";
+    query += " WHERE id = ?";
     const params = [req.nombres, req.apellidos, req.numeroEmpleado, req.horasClase, id]
     connection.query(query, params, (err, result, fields) => {
       if (err) throw err;
@@ -71,7 +71,7 @@ const updateProfesor = (req, res, param) => {
 const deleteProfesor = (req, res, param) => {
   const id = param;
   try{
-    const query = "DELETE FROM profesor WHERE profesor_id = ?";
+    const query = "DELETE FROM profesor WHERE id = ?";
     const params = [id];
     connection.query(query, params, (err, result) => {
       if (err) throw err;

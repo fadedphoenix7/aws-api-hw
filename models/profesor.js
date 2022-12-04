@@ -1,6 +1,6 @@
 class Profesor {
-  constructor({profresor_id, numeroEmpleado, nombres, apellidos, horasClase}){
-    this.id = profresor_id;
+  constructor({id, numeroEmpleado, nombres, apellidos, horasClase}){
+    this.id = id;
     this.numeroEmpleado = numeroEmpleado;
     this.nombres = nombres;
     this.apellidos = apellidos;

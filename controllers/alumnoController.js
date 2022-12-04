@@ -34,7 +34,7 @@ const getAlumnos = (res) => {
 const getAlumno = (param, res) => {
   const id = param;
   try{
-    const query = "SELECT * FROM alumno WHERE alumno.alumno_id = ?";
+    const query = "SELECT * FROM alumno WHERE id = ?";
     const params = [id];
     connection.query(query, params, (err, result) => {
       if (err) throw err;
@@ -61,7 +61,33 @@ const updateAlumno = (req, res, param) => {
       if(index != values.length - 1) query += ", "
       params.push(value[1])
     }) 
-    query += " WHERE alumno_id = ?";
+    query += " WHERE id = ?";
+    params.push(id)
+    connection.query(query, params, (err, result, fields) => {
+      if (err) throw err;
+      if (result.affectedRows != 1) return res.sendStatus(404);
+      getAlumno(id, res)
+    });
+  }
+  catch(err){
+    res.status(500).send(err);
+  }
+}
+
+const updateImgAlumno = (req, res, param) => {
+  const id = param;
+  // if(!validateFields(req)) return res.status(400).send({})
+
+  try{
+    let query = "UPDATE alumno SET "
+    const values = Object.entries(req)
+    let params = []
+    values.forEach((value, index) => {
+      query += `${value[0]} = ?`;
+      if(index != values.length - 1) query += ", "
+      params.push(value[1])
+    }) 
+    query += " WHERE id = ?";
     params.push(id)
     connection.query(query, params, (err, result, fields) => {
       if (err) throw err;
@@ -77,7 +103,7 @@ const updateAlumno = (req, res, param) => {
 const deleteAlumno = (req, res, param) => {
   const id = param;
   try{
-    const query = "DELETE FROM alumno WHERE alumno.alumno_id = ?";
+    const query = "DELETE FROM alumno WHERE id = ?";
     const params = [id];
     connection.query(query, params, (err, result) => {
       if (err) throw err;

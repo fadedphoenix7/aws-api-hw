@@ -19,6 +19,10 @@ router.put('/:id', (req, res) => {
   updateAlumno(req.body, res, req.params.id)
 });
 
+router.post('/:id/fotoPerfil', (req, res) => {
+  updateImgAlumno(req.body, res, req.params.id);
+});
+
 router.delete('/:id', (req, res) => {
   deleteAlumno(req, res, req.params.id)
 });
