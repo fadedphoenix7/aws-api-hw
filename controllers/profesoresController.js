@@ -1,72 +1,97 @@
+const { connection } = require('../connection/db');
 const Profesor = require('../models/profesor');
-const router = require('../routes/profesores');
 const {isNumber, isText, isEmpty, isBlank} = require('../utils/validators');
 
-let profesores = [];
-1
 const addProfesor = (req, res) => {
-  const _profesor = req
-  if(!validateFields(_profesor)) return res.status(400).send({})
-  let profesor = new Profesor(_profesor.id, 
-                            _profesor.numeroEmpleado, 
-                            _profesor.nombres,
-                            _profesor.apellidos,
-                            _profesor.horasClase);
-  profesores.push(profesor);
-  res.status(201).send(profesor);
+  if(!validateFields(req)) return res.status(400).send({})
+  let profesor = new Profesor(req);
+  try{
+    const query = "INSERT INTO profesor (nombres, apellidos, numero_empleado, horas_clase) VALUES (?, ?, ?, ?)";
+    const params = [profesor.nombres, profesor.apellidos, profesor.numeroEmpleado, profesor.horasClase]
+    connection.query(query, params, (err, result) => {
+      if (err) throw err;
+      res.status(201).send(profesor);  
+    });
+  }
+  catch(err){
+    res.status(500).send(err);
+  }
 }
 
 const getProfesores = (res) => {
-  res.status(200).send(profesores);
+  try{
+    const query = "SELECT * FROM profesor";
+    connection.query(query, (err, result) => {
+      if (err) throw err;
+      res.status(200).send(result);
+    });
+  }
+  catch(err){
+    res.status(500).send(err);
+  }
 }
 
 const getProfesor = (param, res) => {
   const id = param;
-  const profesors = profesores.filter( (prof) => {
-    return prof.id == id ? prof : null
-  });
-
-  if (profesors.length != 1) return res.sendStatus(404);
-  return res.send(200, profesors[0]);
+  try{
+    const query = "SELECT * FROM profesor WHERE profesor_id = ?";
+    const params = [id];
+    connection.query(query, params, (err, result) => {
+      if (err) throw err;
+      if (result.length != 1) return res.sendStatus(404);
+      return res.status(200).send(result[0]);
+    });
+  }
+  catch(err){
+    res.status(500).send(err);
+  }
 }
 
 const updateProfesor = (req, res, param) => {
   const id = param;
-  const profesors = profesores.filter( (prof) => {
-    return prof.id == id ? prof : null
-  });
-  if (profesors.length != 1) return res.sendStatus(404);
   if(!validateFields(req)) return res.status(400).send({})
-  let profesor = profesors[0];
-  profesor.nombres = req.nombres;
-  profesor.apellidos = req.apellidos;
-  profesor.horasClase = req.horasClase;
 
-  res.send(200, profesor);
+  try{
+    let query = "UPDATE profesor SET nombres = ?, apellidos = ?, numero_empleado = ?, horas_clase = ?";
+    query += " WHERE profesor_id = ?";
+    const params = [req.nombres, req.apellidos, req.numeroEmpleado, req.horasClase, id]
+    connection.query(query, params, (err, result, fields) => {
+      if (err) throw err;
+      if (result.affectedRows != 1) return res.sendStatus(404);
+      getProfesor(id, res)
+    });
+  }
+  catch(err){
+    console.error(err);
+    res.status(500).send(err);
+  }
 
 }
 
 const deleteProfesor = (req, res, param) => {
   const id = param;
-  const size = profesores.length;
-  if(size < 1) res.sendStatus(404);
-  profesores = profesores.filter( (prof) => {
-    return prof.id != id ? prof : null
-  });
-
-  if(size == profesores.length) return  res.sendStatus(404)
-
-  res.sendStatus(200);
+  try{
+    const query = "DELETE FROM profesor WHERE profesor_id = ?";
+    const params = [id];
+    connection.query(query, params, (err, result) => {
+      if (err) throw err;
+      if (result.affectedRows != 1) return res.sendStatus(404);
+      return res.sendStatus(200);
+    });
+  }
+  catch(err){
+    res.status(500).send(err);
+  }
   
 }
 
-const validateFields = ({id, numeroEmpleado, nombres, apellidos, horasClase}) => {
-  if(isEmpty(id) || isEmpty(numeroEmpleado) || isEmpty(nombres) || 
+const validateFields = ({numeroEmpleado, nombres, apellidos, horasClase}) => {
+  if(isEmpty(numeroEmpleado) || isEmpty(nombres) || 
       isEmpty(apellidos) || isEmpty(horasClase)) return false;
 
   if(isBlank(nombres) || isBlank(apellidos)) return false;   
 
-  return isNumber(id) && isNumber(numeroEmpleado) && isText(nombres) && isText(apellidos)
+  return isNumber(numeroEmpleado) && isText(nombres) && isText(apellidos)
   && isNumber(horasClase)
 }
 

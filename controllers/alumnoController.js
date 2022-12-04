@@ -1,67 +1,102 @@
+const { connection } = require('../connection/db');
 const Alumno = require('../models/alumno');
-const router = require('../routes/alumnos');
 const {isNumber, isText, isEmpty, isBlank, isValidID} = require('../utils/validators');
 
-let alumnos = [];
-1
 const addAlumno = (req, res) => {
-  const _alumno = req
-  if(!validateFields(_alumno)) return res.status(400).send({})
-  let alumno = new Alumno(_alumno);
-  alumnos.push(alumno);
-  res.status(201).send(alumno);
+  if(!validateFields(req)) return res.status(400).send({})
+  let alumno = new Alumno(req);
+  try{
+    const query = "INSERT INTO alumno (nombres, apellidos, matricula, promedio) VALUES (?, ?, ?, ?)";
+    const params = [alumno.nombres, alumno.apellidos, alumno.matricula, alumno.promedio]
+    connection.query(query, params, (err, result) => {
+      if (err) throw err;
+      res.status(201).send(alumno);  
+    });
+  }
+  catch(err){
+    res.status(500).send(err);
+  }
 }
 
 const getAlumnos = (res) => {
-  res.status(200).send(alumnos);
+  try{
+    const query = "SELECT * FROM alumno";
+    connection.query(query, (err, result) => {
+      if (err) throw err;
+      res.status(200).send(result);
+    });
+  }
+  catch(err){
+    res.status(500).send(err);
+  }
 }
 
 const getAlumno = (param, res) => {
   const id = param;
-  const alumnosB = alumnos.filter( (alum) => {
-    return alum.id == id ? alum : null
-  });
-  if (alumnosB.length != 1) return res.sendStatus(404);
-  return res.send(200, alumnosB[0]);
+  try{
+    const query = "SELECT * FROM alumno WHERE alumno.alumno_id = ?";
+    const params = [id];
+    connection.query(query, params, (err, result) => {
+      if (err) throw err;
+      if (result.length != 1) return res.sendStatus(404);
+      return res.status(200).send(result[0]);
+    });
+  }
+  catch(err){
+    res.status(500).send(err);
+  }
+  
 }
 
 const updateAlumno = (req, res, param) => {
   const id = param;
-  const alumnosB = alumnos.filter( (alum) => {
-    return alum.id == id ? alum : null
-  });
-  if (alumnosB.length != 1) return res.sendStatus(404);
   if(!validateFields(req)) return res.status(400).send({})
-  let alumno = alumnosB[0];
-  alumno.nombres = req.nombres;
-  alumno.apellidos = req.apellidos;
-  alumno.matricula = req.matricula;
-  alumno.promedio = req.promedio;
-  
-  res.send(200, alumno);
 
+  try{
+    let query = "UPDATE alumno SET "
+    const values = Object.entries(req)
+    let params = []
+    values.forEach((value, index) => {
+      query += `${value[0]} = ?`;
+      if(index != values.length - 1) query += ", "
+      params.push(value[1])
+    }) 
+    query += " WHERE alumno_id = ?";
+    params.push(id)
+    connection.query(query, params, (err, result, fields) => {
+      if (err) throw err;
+      if (result.affectedRows != 1) return res.sendStatus(404);
+      getAlumno(id, res)
+    });
+  }
+  catch(err){
+    res.status(500).send(err);
+  }
 }
 
 const deleteAlumno = (req, res, param) => {
   const id = param;
-  const size = alumnos.length;
-  if(size < 1) return res.sendStatus(404);
-  alumnos = alumnos.filter( (alum) => {
-    return alum.id != id ? alum : null
-  });
-
-  if(size == alumnos.length) return res.sendStatus(404)
-
-  res.sendStatus(200);
-  
+  try{
+    const query = "DELETE FROM alumno WHERE alumno.alumno_id = ?";
+    const params = [id];
+    connection.query(query, params, (err, result) => {
+      if (err) throw err;
+      console.log(result);
+      if (result.affectedRows != 1) return res.sendStatus(404);
+      return res.sendStatus(200);
+    });
+  }
+  catch(err){
+    res.status(500).send(err);
+  }
 }
 
-const validateFields = ({id, nombres, apellidos, matricula, promedio}) => {
-  if(isEmpty(id) || isEmpty(nombres) || isEmpty(apellidos) || 
+const validateFields = ({nombres, apellidos, matricula, promedio}) => {
+  if(isEmpty(nombres) || isEmpty(apellidos) || 
       isEmpty(matricula) || isEmpty(promedio)) return false;
 1
   if(isBlank(matricula) || isBlank(nombres) || isBlank(apellidos)) return false;   
-  return isNumber(id) && isValidID(matricula) && isText(nombres) && isText(apellidos)
+  return isValidID(matricula) && isText(nombres) && isText(apellidos)
   && isNumber(promedio)
 }
 
