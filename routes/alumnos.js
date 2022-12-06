@@ -42,7 +42,7 @@ router.put('/:id', (req, res) => {
   updateAlumno(req.body, res, req.params.id)
 });
 
-router.post('/:id/fotoPerfil', file = upload.single('img'),(req, res) => {
+router.post('/:id/fotoPerfil', file = upload.single('foto'),(req, res) => {
   updateImgAlumno(req.body, req.file, res, req.params.id);
 });
 

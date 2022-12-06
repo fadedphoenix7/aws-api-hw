@@ -13,6 +13,8 @@ const addAlumno = (req, res) => {
     const params = [alumno.nombres, alumno.apellidos, alumno.matricula, alumno.promedio]
     connection.query(query, params, (err, result) => {
       if (err) throw err.message;
+      alumno.id = result.insertId
+      console.log(alumno);
       res.status(201).send(alumno);  
     });
   }
@@ -88,7 +90,8 @@ const updateImgAlumno = (req, file,res, param) => {
     connection.query(query, [file.location, id], (err, result, fields) => {
       if (err) throw err.message;
       if (result.affectedRows != 1) return res.sendStatus(404);
-      res.status(201).send({message: "Image sucesfully uploaded!"})
+      getAlumno(id, res)
+      // res.status(200).send({message: "Image sucesfully uploaded!"})
     });
   }
   catch(err){
