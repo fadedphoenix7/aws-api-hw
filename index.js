@@ -1,5 +1,6 @@
 const Express = require('express');
 require('dotenv').config();
+const path = require("path");
 
 // import routes
 const routeProf = require('./routes/profesores');

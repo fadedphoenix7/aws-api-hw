@@ -2,6 +2,9 @@ const { connection } = require('../connection/db');
 const Alumno = require('../models/alumno');
 const {isNumber, isText, isEmpty, isBlank, isValidID} = require('../utils/validators');
 
+const path = require("path");
+const fs = require("fs");
+
 const addAlumno = (req, res) => {
   if(!validateFields(req)) return res.status(400).send({})
   let alumno = new Alumno(req);
@@ -9,7 +12,7 @@ const addAlumno = (req, res) => {
     const query = "INSERT INTO alumno (nombres, apellidos, matricula, promedio) VALUES (?, ?, ?, ?)";
     const params = [alumno.nombres, alumno.apellidos, alumno.matricula, alumno.promedio]
     connection.query(query, params, (err, result) => {
-      if (err) throw err;
+      if (err) throw err.message;
       res.status(201).send(alumno);  
     });
   }
@@ -21,13 +24,15 @@ const addAlumno = (req, res) => {
 const getAlumnos = (res) => {
   try{
     const query = "SELECT * FROM alumno";
+    console.log(connection.ping())
     connection.query(query, (err, result) => {
-      if (err) throw err;
+      if (err) res.status(500).send(err);
       res.status(200).send(result);
     });
   }
-  catch(err){
-    res.status(500).send(err);
+  catch(e){
+    // console.log("here" , e);
+    res.status(500).send(e);
   }
 }
 
@@ -37,7 +42,7 @@ const getAlumno = (param, res) => {
     const query = "SELECT * FROM alumno WHERE id = ?";
     const params = [id];
     connection.query(query, params, (err, result) => {
-      if (err) throw err;
+      if (err) throw err.message;
       if (result.length != 1) return res.sendStatus(404);
       return res.status(200).send(result[0]);
     });
@@ -64,7 +69,7 @@ const updateAlumno = (req, res, param) => {
     query += " WHERE id = ?";
     params.push(id)
     connection.query(query, params, (err, result, fields) => {
-      if (err) throw err;
+      if (err) throw err.message;
       if (result.affectedRows != 1) return res.sendStatus(404);
       getAlumno(id, res)
     });
@@ -74,25 +79,16 @@ const updateAlumno = (req, res, param) => {
   }
 }
 
-const updateImgAlumno = (req, res, param) => {
+const updateImgAlumno = (req, file,res, param) => {
   const id = param;
-  // if(!validateFields(req)) return res.status(400).send({})
+  console.log(file);
 
   try{
-    let query = "UPDATE alumno SET "
-    const values = Object.entries(req)
-    let params = []
-    values.forEach((value, index) => {
-      query += `${value[0]} = ?`;
-      if(index != values.length - 1) query += ", "
-      params.push(value[1])
-    }) 
-    query += " WHERE id = ?";
-    params.push(id)
-    connection.query(query, params, (err, result, fields) => {
-      if (err) throw err;
+    let query = "UPDATE alumno SET fotoPerfilUrl = ? WHERE id = ?";
+    connection.query(query, [file.location, id], (err, result, fields) => {
+      if (err) throw err.message;
       if (result.affectedRows != 1) return res.sendStatus(404);
-      getAlumno(id, res)
+      res.status(201).send({message: "Image sucesfully uploaded!"})
     });
   }
   catch(err){
@@ -106,7 +102,7 @@ const deleteAlumno = (req, res, param) => {
     const query = "DELETE FROM alumno WHERE id = ?";
     const params = [id];
     connection.query(query, params, (err, result) => {
-      if (err) throw err;
+      if (err) throw err.message;
       console.log(result);
       if (result.affectedRows != 1) return res.sendStatus(404);
       return res.sendStatus(200);
@@ -126,4 +122,4 @@ const validateFields = ({nombres, apellidos, matricula, promedio}) => {
   && isNumber(promedio)
 }
 
-module.exports = {addAlumno, getAlumnos, getAlumno, updateAlumno, deleteAlumno}
+module.exports = {addAlumno, getAlumnos, getAlumno, updateAlumno, deleteAlumno, updateImgAlumno}
