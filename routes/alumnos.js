@@ -4,7 +4,7 @@ require('dotenv').config()
 
 const multer = require('multer') // v1.0.5
 const multerS3  = require('multer-s3');
-const s3 = require('../connection/aws');
+const {s3} = require('../connection/aws');
 
 
 const upload = multer({
@@ -14,14 +14,12 @@ const upload = multer({
       contentType: multerS3.AUTO_CONTENT_TYPE,
       acl: process.env.ACL_PERMISSION,
       key: function (req, file, cb) {
-        // console.log(req);
-          console.log(req.params, file);
           let ext ;
           if(file.originalname.includes('.png')) ext = ".png"
           if(file.originalname.includes('.jpg')) ext = ".jpg"
           if(file.originalname.includes('.jpeg')) ext = ".jpeg"
           if(file.originalname.includes('.gif')) ext = ".gif"
-          cb(null, `alumno_${req.params.id}${ext}`); //use Date.now() for unique file keys
+          cb(null, `alumno_${req.params.id}${ext}`); 
       }
   })
 });
